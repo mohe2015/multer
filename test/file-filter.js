@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { ifError, strictEqual } from 'assert'
 
-var util = require('./_util')
-var multer = require('../')
-var FormData = require('form-data')
+import { file as _file, submitForm } from './_util.js'
+import multer from '../index.js'
+import FormData from 'form-data'
 
 function withFilter (fileFilter) {
   return multer({ fileFilter: fileFilter })
@@ -20,36 +20,36 @@ function reportFakeError (req, file, cb) {
 
 describe('File Filter', function () {
   it('should skip some files', function (done) {
-    var form = new FormData()
-    var upload = withFilter(skipSpecificFile)
-    var parser = upload.fields([
+    const form = new FormData()
+    const upload = withFilter(skipSpecificFile)
+    const parser = upload.fields([
       { name: 'notme', maxCount: 1 },
       { name: 'butme', maxCount: 1 }
     ])
 
-    form.append('notme', util.file('tiny0.dat'))
-    form.append('butme', util.file('tiny1.dat'))
+    form.append('notme', _file('tiny0.dat'))
+    form.append('butme', _file('tiny1.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
-      assert.strictEqual(req.files.notme, undefined)
-      assert.strictEqual(req.files.butme[0].fieldname, 'butme')
-      assert.strictEqual(req.files.butme[0].originalname, 'tiny1.dat')
-      assert.strictEqual(req.files.butme[0].size, 7)
-      assert.strictEqual(req.files.butme[0].buffer.length, 7)
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
+      strictEqual(req.files.notme, undefined)
+      strictEqual(req.files.butme[0].fieldname, 'butme')
+      strictEqual(req.files.butme[0].originalname, 'tiny1.dat')
+      strictEqual(req.files.butme[0].size, 7)
+      strictEqual(req.files.butme[0].buffer.length, 7)
       done()
     })
   })
 
   it('should report errors from fileFilter', function (done) {
-    var form = new FormData()
-    var upload = withFilter(reportFakeError)
-    var parser = upload.single('test')
+    const form = new FormData()
+    const upload = withFilter(reportFakeError)
+    const parser = upload.single('test')
 
-    form.append('test', util.file('tiny0.dat'))
+    form.append('test', _file('tiny0.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.strictEqual(err.message, 'Fake error')
+    submitForm(parser, form, function (err, req) {
+      strictEqual(err.message, 'Fake error')
       done()
     })
   })

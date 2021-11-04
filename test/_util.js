@@ -1,21 +1,24 @@
-var fs = require('fs')
-var path = require('path')
-var stream = require('stream')
-var onFinished = require('on-finished')
+import { createReadStream, statSync } from 'fs'
+import path, { join } from 'path'
+import { PassThrough } from 'stream'
+import onFinished from 'on-finished'
+import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-exports.file = function file (name) {
-  return fs.createReadStream(path.join(__dirname, 'files', name))
+export function file (name) {
+  return createReadStream(join(__dirname, 'files', name))
 }
 
-exports.fileSize = function fileSize (path) {
-  return fs.statSync(path).size
+export function fileSize (path) {
+  return statSync(path).size
 }
 
-exports.submitForm = function submitForm (multer, form, cb) {
+export function submitForm (multer, form, cb) {
   form.getLength(function (err, length) {
     if (err) return cb(err)
 
-    var req = new stream.PassThrough()
+    const req = new PassThrough()
 
     req.complete = false
     form.once('end', function () {

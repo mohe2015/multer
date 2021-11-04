@@ -1,38 +1,38 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { strictEqual, ifError } from 'assert'
 
-var util = require('./_util')
-var multer = require('../')
-var FormData = require('form-data')
+import { file as _file, submitForm } from './_util.js'
+import multer from '../index.js'
+import FormData from 'form-data'
 
 function generateForm () {
-  var form = new FormData()
+  const form = new FormData()
 
-  form.append('CA$|-|', util.file('empty.dat'))
-  form.append('set-1', util.file('tiny0.dat'))
-  form.append('set-1', util.file('empty.dat'))
-  form.append('set-1', util.file('tiny1.dat'))
-  form.append('set-2', util.file('tiny1.dat'))
-  form.append('set-2', util.file('tiny0.dat'))
-  form.append('set-2', util.file('empty.dat'))
+  form.append('CA$|-|', _file('empty.dat'))
+  form.append('set-1', _file('tiny0.dat'))
+  form.append('set-1', _file('empty.dat'))
+  form.append('set-1', _file('tiny1.dat'))
+  form.append('set-2', _file('tiny1.dat'))
+  form.append('set-2', _file('tiny0.dat'))
+  form.append('set-2', _file('empty.dat'))
 
   return form
 }
 
 function assertSet (files, setName, fileNames) {
-  var len = fileNames.length
+  const len = fileNames.length
 
-  assert.strictEqual(files.length, len)
+  strictEqual(files.length, len)
 
-  for (var i = 0; i < len; i++) {
-    assert.strictEqual(files[i].fieldname, setName)
-    assert.strictEqual(files[i].originalname, fileNames[i])
+  for (let i = 0; i < len; i++) {
+    strictEqual(files[i].fieldname, setName)
+    strictEqual(files[i].originalname, fileNames[i])
   }
 }
 
 describe('Select Field', function () {
-  var parser
+  let parser
 
   before(function () {
     parser = multer().fields([
@@ -43,30 +43,30 @@ describe('Select Field', function () {
   })
 
   it('should select the first file with fieldname', function (done) {
-    util.submitForm(parser, generateForm(), function (err, req) {
-      assert.ifError(err)
+    submitForm(parser, generateForm(), function (err, req) {
+      ifError(err)
 
-      var file
+      let file
 
       file = req.files['CA$|-|'][0]
-      assert.strictEqual(file.fieldname, 'CA$|-|')
-      assert.strictEqual(file.originalname, 'empty.dat')
+      strictEqual(file.fieldname, 'CA$|-|')
+      strictEqual(file.originalname, 'empty.dat')
 
       file = req.files['set-1'][0]
-      assert.strictEqual(file.fieldname, 'set-1')
-      assert.strictEqual(file.originalname, 'tiny0.dat')
+      strictEqual(file.fieldname, 'set-1')
+      strictEqual(file.originalname, 'tiny0.dat')
 
       file = req.files['set-2'][0]
-      assert.strictEqual(file.fieldname, 'set-2')
-      assert.strictEqual(file.originalname, 'tiny1.dat')
+      strictEqual(file.fieldname, 'set-2')
+      strictEqual(file.originalname, 'tiny1.dat')
 
       done()
     })
   })
 
   it('should select all files with fieldname', function (done) {
-    util.submitForm(parser, generateForm(), function (err, req) {
-      assert.ifError(err)
+    submitForm(parser, generateForm(), function (err, req) {
+      ifError(err)
 
       assertSet(req.files['CA$|-|'], 'CA$|-|', ['empty.dat'])
       assertSet(req.files['set-1'], 'set-1', ['tiny0.dat', 'empty.dat', 'tiny1.dat'])

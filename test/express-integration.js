@@ -1,19 +1,19 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { strictEqual, ifError } from 'assert'
 
-var multer = require('../')
-var util = require('./_util')
+import multer from '../index.js'
+import { file as _file } from './_util.js'
 
-var express = require('express')
-var FormData = require('form-data')
-var concat = require('concat-stream')
-var onFinished = require('on-finished')
+import express, { Router } from 'express'
+import FormData from 'form-data'
+import concat from 'concat-stream'
+import onFinished from 'on-finished'
 
-var port = 34279
+const port = 34279
 
 describe('Express Integration', function () {
-  var app
+  let app
 
   before(function (done) {
     app = express()
@@ -21,7 +21,7 @@ describe('Express Integration', function () {
   })
 
   function submitForm (form, path, cb) {
-    var req = form.submit('http://localhost:' + port + path)
+    const req = form.submit('http://localhost:' + port + path)
 
     req.on('error', cb)
     req.on('response', function (res) {
@@ -33,15 +33,15 @@ describe('Express Integration', function () {
   }
 
   it('should work with express error handling', function (done) {
-    var limits = { fileSize: 200 }
-    var upload = multer({ limits: limits })
-    var router = new express.Router()
-    var form = new FormData()
+    const limits = { fileSize: 200 }
+    const upload = multer({ limits: limits })
+    const router = new Router()
+    const form = new FormData()
 
-    var routeCalled = 0
-    var errorCalled = 0
+    let routeCalled = 0
+    let errorCalled = 0
 
-    form.append('avatar', util.file('large.jpg'))
+    form.append('avatar', _file('large.jpg'))
 
     router.post('/profile', upload.single('avatar'), function (req, res, next) {
       routeCalled++
@@ -49,7 +49,7 @@ describe('Express Integration', function () {
     })
 
     router.use(function (err, req, res, next) {
-      assert.strictEqual(err.code, 'LIMIT_FILE_SIZE')
+      strictEqual(err.code, 'LIMIT_FILE_SIZE')
 
       errorCalled++
       res.status(500).end('ERROR')
@@ -57,12 +57,12 @@ describe('Express Integration', function () {
 
     app.use('/t1', router)
     submitForm(form, '/t1/profile', function (err, res, body) {
-      assert.ifError(err)
+      ifError(err)
 
-      assert.strictEqual(routeCalled, 0)
-      assert.strictEqual(errorCalled, 1)
-      assert.strictEqual(body.toString(), 'ERROR')
-      assert.strictEqual(res.statusCode, 500)
+      strictEqual(routeCalled, 0)
+      strictEqual(errorCalled, 1)
+      strictEqual(body.toString(), 'ERROR')
+      strictEqual(res.statusCode, 500)
 
       done()
     })
@@ -73,14 +73,14 @@ describe('Express Integration', function () {
       cb(new Error('TEST'))
     }
 
-    var upload = multer({ fileFilter: fileFilter })
-    var router = new express.Router()
-    var form = new FormData()
+    const upload = multer({ fileFilter: fileFilter })
+    const router = new Router()
+    const form = new FormData()
 
-    var routeCalled = 0
-    var errorCalled = 0
+    let routeCalled = 0
+    let errorCalled = 0
 
-    form.append('avatar', util.file('large.jpg'))
+    form.append('avatar', _file('large.jpg'))
 
     router.post('/profile', upload.single('avatar'), function (req, res, next) {
       routeCalled++
@@ -88,7 +88,7 @@ describe('Express Integration', function () {
     })
 
     router.use(function (err, req, res, next) {
-      assert.strictEqual(err.message, 'TEST')
+      strictEqual(err.message, 'TEST')
 
       errorCalled++
       res.status(500).end('ERROR')
@@ -96,12 +96,12 @@ describe('Express Integration', function () {
 
     app.use('/t2', router)
     submitForm(form, '/t2/profile', function (err, res, body) {
-      assert.ifError(err)
+      ifError(err)
 
-      assert.strictEqual(routeCalled, 0)
-      assert.strictEqual(errorCalled, 1)
-      assert.strictEqual(body.toString(), 'ERROR')
-      assert.strictEqual(res.statusCode, 500)
+      strictEqual(routeCalled, 0)
+      strictEqual(errorCalled, 1)
+      strictEqual(body.toString(), 'ERROR')
+      strictEqual(res.statusCode, 500)
 
       done()
     })

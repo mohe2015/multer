@@ -1,23 +1,23 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { ifError, strictEqual } from 'assert'
 
-var util = require('./_util')
-var multer = require('../')
-var FormData = require('form-data')
+import { file as _file, submitForm } from './_util.js'
+import multer, { memoryStorage } from '../index.js'
+import FormData from 'form-data'
 
 describe('File ordering', function () {
   it('should present files in same order as they came', function (done) {
-    var storage = multer.memoryStorage()
-    var upload = multer({ storage: storage })
-    var parser = upload.array('themFiles', 2)
+    const storage = memoryStorage()
+    const upload = multer({ storage: storage })
+    const parser = upload.array('themFiles', 2)
 
-    var i = 0
-    var calls = [{}, {}]
-    var pending = 2
-    var _handleFile = storage._handleFile
+    let i = 0
+    const calls = [{}, {}]
+    let pending = 2
+    const _handleFile = storage._handleFile
     storage._handleFile = function (req, file, cb) {
-      var id = (i++)
+      const id = (i++)
 
       _handleFile.call(this, req, file, function (err, info) {
         if (err) return cb(err)
@@ -32,16 +32,16 @@ describe('File ordering', function () {
       })
     }
 
-    var form = new FormData()
+    const form = new FormData()
 
-    form.append('themFiles', util.file('small0.dat'))
-    form.append('themFiles', util.file('small1.dat'))
+    form.append('themFiles', _file('small0.dat'))
+    form.append('themFiles', _file('small1.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
-      assert.strictEqual(req.files.length, 2)
-      assert.strictEqual(req.files[0].originalname, 'small0.dat')
-      assert.strictEqual(req.files[1].originalname, 'small1.dat')
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
+      strictEqual(req.files.length, 2)
+      strictEqual(req.files[0].originalname, 'small0.dat')
+      strictEqual(req.files[1].originalname, 'small1.dat')
       done()
     })
   })

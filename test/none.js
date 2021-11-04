@@ -1,46 +1,46 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { ok, strictEqual, ifError } from 'assert'
 
-var util = require('./_util')
-var multer = require('../')
-var FormData = require('form-data')
+import { file, submitForm } from './_util.js'
+import multer from '../index.js'
+import FormData from 'form-data'
 
 describe('None', function () {
-  var parser
+  let parser
 
   before(function () {
     parser = multer().none()
   })
 
   it('should not allow file uploads', function (done) {
-    var form = new FormData()
+    const form = new FormData()
 
     form.append('key1', 'val1')
     form.append('key2', 'val2')
-    form.append('file', util.file('small0.dat'))
+    form.append('file', file('small0.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ok(err)
-      assert.strictEqual(err.code, 'LIMIT_UNEXPECTED_FILE')
-      assert.strictEqual(req.files, undefined)
-      assert.strictEqual(req.body.key1, 'val1')
-      assert.strictEqual(req.body.key2, 'val2')
+    submitForm(parser, form, function (err, req) {
+      ok(err)
+      strictEqual(err.code, 'LIMIT_UNEXPECTED_FILE')
+      strictEqual(req.files, undefined)
+      strictEqual(req.body.key1, 'val1')
+      strictEqual(req.body.key2, 'val2')
       done()
     })
   })
 
   it('should handle text fields', function (done) {
-    var form = new FormData()
+    const form = new FormData()
 
     form.append('key1', 'val1')
     form.append('key2', 'val2')
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
-      assert.strictEqual(req.files, undefined)
-      assert.strictEqual(req.body.key1, 'val1')
-      assert.strictEqual(req.body.key2, 'val2')
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
+      strictEqual(req.files, undefined)
+      strictEqual(req.body.key1, 'val1')
+      strictEqual(req.body.key2, 'val2')
       done()
     })
   })

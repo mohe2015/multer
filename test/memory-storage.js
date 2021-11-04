@@ -1,14 +1,14 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
-var deepEqual = require('deep-equal')
+import assert, { ifError, strictEqual } from 'assert'
+import deepEqual from 'deep-equal'
 
-var util = require('./_util')
-var multer = require('../')
-var FormData = require('form-data')
+import { file, submitForm } from './_util.js'
+import multer from '../index.js'
+import FormData from 'form-data'
 
 describe('Memory Storage', function () {
-  var upload
+  let upload
 
   before(function (done) {
     upload = multer()
@@ -16,31 +16,31 @@ describe('Memory Storage', function () {
   })
 
   it('should process multipart/form-data POST request', function (done) {
-    var form = new FormData()
-    var parser = upload.single('small0')
+    const form = new FormData()
+    const parser = upload.single('small0')
 
     form.append('name', 'Multer')
-    form.append('small0', util.file('small0.dat'))
+    form.append('small0', file('small0.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
 
-      assert.strictEqual(req.body.name, 'Multer')
+      strictEqual(req.body.name, 'Multer')
 
-      assert.strictEqual(req.file.fieldname, 'small0')
-      assert.strictEqual(req.file.originalname, 'small0.dat')
-      assert.strictEqual(req.file.size, 1778)
-      assert.strictEqual(req.file.buffer.length, 1778)
+      strictEqual(req.file.fieldname, 'small0')
+      strictEqual(req.file.originalname, 'small0.dat')
+      strictEqual(req.file.size, 1778)
+      strictEqual(req.file.buffer.length, 1778)
 
       done()
     })
   })
 
   it('should process empty fields and an empty file', function (done) {
-    var form = new FormData()
-    var parser = upload.single('empty')
+    const form = new FormData()
+    const parser = upload.single('empty')
 
-    form.append('empty', util.file('empty.dat'))
+    form.append('empty', file('empty.dat'))
     form.append('name', 'Multer')
     form.append('version', '')
     form.append('year', '')
@@ -51,30 +51,30 @@ describe('Memory Storage', function () {
     form.append('checkboxempty', '')
     form.append('checkboxempty', '')
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
 
-      assert.strictEqual(req.body.name, 'Multer')
-      assert.strictEqual(req.body.version, '')
-      assert.strictEqual(req.body.year, '')
+      strictEqual(req.body.name, 'Multer')
+      strictEqual(req.body.version, '')
+      strictEqual(req.body.year, '')
 
       assert(deepEqual(req.body.checkboxfull, ['cb1', 'cb2']))
       assert(deepEqual(req.body.checkboxhalfempty, ['cb1', '']))
       assert(deepEqual(req.body.checkboxempty, ['', '']))
 
-      assert.strictEqual(req.file.fieldname, 'empty')
-      assert.strictEqual(req.file.originalname, 'empty.dat')
-      assert.strictEqual(req.file.size, 0)
-      assert.strictEqual(req.file.buffer.length, 0)
-      assert.strictEqual(Buffer.isBuffer(req.file.buffer), true)
+      strictEqual(req.file.fieldname, 'empty')
+      strictEqual(req.file.originalname, 'empty.dat')
+      strictEqual(req.file.size, 0)
+      strictEqual(req.file.buffer.length, 0)
+      strictEqual(Buffer.isBuffer(req.file.buffer), true)
 
       done()
     })
   })
 
   it('should process multiple files', function (done) {
-    var form = new FormData()
-    var parser = upload.fields([
+    const form = new FormData()
+    const parser = upload.fields([
       { name: 'empty', maxCount: 1 },
       { name: 'tiny0', maxCount: 1 },
       { name: 'tiny1', maxCount: 1 },
@@ -84,53 +84,53 @@ describe('Memory Storage', function () {
       { name: 'large', maxCount: 1 }
     ])
 
-    form.append('empty', util.file('empty.dat'))
-    form.append('tiny0', util.file('tiny0.dat'))
-    form.append('tiny1', util.file('tiny1.dat'))
-    form.append('small0', util.file('small0.dat'))
-    form.append('small1', util.file('small1.dat'))
-    form.append('medium', util.file('medium.dat'))
-    form.append('large', util.file('large.jpg'))
+    form.append('empty', file('empty.dat'))
+    form.append('tiny0', file('tiny0.dat'))
+    form.append('tiny1', file('tiny1.dat'))
+    form.append('small0', file('small0.dat'))
+    form.append('small1', file('small1.dat'))
+    form.append('medium', file('medium.dat'))
+    form.append('large', file('large.jpg'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
 
       assert(deepEqual(req.body, {}))
 
-      assert.strictEqual(req.files.empty[0].fieldname, 'empty')
-      assert.strictEqual(req.files.empty[0].originalname, 'empty.dat')
-      assert.strictEqual(req.files.empty[0].size, 0)
-      assert.strictEqual(req.files.empty[0].buffer.length, 0)
+      strictEqual(req.files.empty[0].fieldname, 'empty')
+      strictEqual(req.files.empty[0].originalname, 'empty.dat')
+      strictEqual(req.files.empty[0].size, 0)
+      strictEqual(req.files.empty[0].buffer.length, 0)
 
-      assert.strictEqual(req.files.tiny0[0].fieldname, 'tiny0')
-      assert.strictEqual(req.files.tiny0[0].originalname, 'tiny0.dat')
-      assert.strictEqual(req.files.tiny0[0].size, 122)
-      assert.strictEqual(req.files.tiny0[0].buffer.length, 122)
+      strictEqual(req.files.tiny0[0].fieldname, 'tiny0')
+      strictEqual(req.files.tiny0[0].originalname, 'tiny0.dat')
+      strictEqual(req.files.tiny0[0].size, 122)
+      strictEqual(req.files.tiny0[0].buffer.length, 122)
 
-      assert.strictEqual(req.files.tiny1[0].fieldname, 'tiny1')
-      assert.strictEqual(req.files.tiny1[0].originalname, 'tiny1.dat')
-      assert.strictEqual(req.files.tiny1[0].size, 7)
-      assert.strictEqual(req.files.tiny1[0].buffer.length, 7)
+      strictEqual(req.files.tiny1[0].fieldname, 'tiny1')
+      strictEqual(req.files.tiny1[0].originalname, 'tiny1.dat')
+      strictEqual(req.files.tiny1[0].size, 7)
+      strictEqual(req.files.tiny1[0].buffer.length, 7)
 
-      assert.strictEqual(req.files.small0[0].fieldname, 'small0')
-      assert.strictEqual(req.files.small0[0].originalname, 'small0.dat')
-      assert.strictEqual(req.files.small0[0].size, 1778)
-      assert.strictEqual(req.files.small0[0].buffer.length, 1778)
+      strictEqual(req.files.small0[0].fieldname, 'small0')
+      strictEqual(req.files.small0[0].originalname, 'small0.dat')
+      strictEqual(req.files.small0[0].size, 1778)
+      strictEqual(req.files.small0[0].buffer.length, 1778)
 
-      assert.strictEqual(req.files.small1[0].fieldname, 'small1')
-      assert.strictEqual(req.files.small1[0].originalname, 'small1.dat')
-      assert.strictEqual(req.files.small1[0].size, 315)
-      assert.strictEqual(req.files.small1[0].buffer.length, 315)
+      strictEqual(req.files.small1[0].fieldname, 'small1')
+      strictEqual(req.files.small1[0].originalname, 'small1.dat')
+      strictEqual(req.files.small1[0].size, 315)
+      strictEqual(req.files.small1[0].buffer.length, 315)
 
-      assert.strictEqual(req.files.medium[0].fieldname, 'medium')
-      assert.strictEqual(req.files.medium[0].originalname, 'medium.dat')
-      assert.strictEqual(req.files.medium[0].size, 13196)
-      assert.strictEqual(req.files.medium[0].buffer.length, 13196)
+      strictEqual(req.files.medium[0].fieldname, 'medium')
+      strictEqual(req.files.medium[0].originalname, 'medium.dat')
+      strictEqual(req.files.medium[0].size, 13196)
+      strictEqual(req.files.medium[0].buffer.length, 13196)
 
-      assert.strictEqual(req.files.large[0].fieldname, 'large')
-      assert.strictEqual(req.files.large[0].originalname, 'large.jpg')
-      assert.strictEqual(req.files.large[0].size, 2413677)
-      assert.strictEqual(req.files.large[0].buffer.length, 2413677)
+      strictEqual(req.files.large[0].fieldname, 'large')
+      strictEqual(req.files.large[0].originalname, 'large.jpg')
+      strictEqual(req.files.large[0].size, 2413677)
+      strictEqual(req.files.large[0].buffer.length, 2413677)
 
       done()
     })

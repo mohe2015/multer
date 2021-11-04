@@ -1,12 +1,13 @@
 /* eslint-env mocha */
 
-var assert = require('assert')
+import { ifError, ok, strictEqual } from 'assert'
 
-var util = require('./_util')
-var multer = require('../')
-var temp = require('fs-temp')
-var rimraf = require('rimraf')
-var FormData = require('form-data')
+import { file as _file, submitForm, fileSize } from './_util.js'
+import multer, { diskStorage } from '../index.js'
+import { mkdir, template } from 'fs-temp'
+import pkg from 'rimraf'
+import FormData from 'form-data'
+const { sync } = pkg
 
 function generateFilename (req, file, cb) {
   cb(null, file.fieldname + file.originalname)
@@ -17,15 +18,15 @@ function startsWith (str, start) {
 }
 
 describe('Functionality', function () {
-  var cleanup = []
+  const cleanup = []
 
   function makeStandardEnv (cb) {
-    temp.mkdir(function (err, uploadDir) {
+    mkdir(function (err, uploadDir) {
       if (err) return cb(err)
 
       cleanup.push(uploadDir)
 
-      var storage = multer.diskStorage({
+      const storage = diskStorage({
         destination: uploadDir,
         filename: generateFilename
       })
@@ -39,20 +40,20 @@ describe('Functionality', function () {
   }
 
   after(function () {
-    while (cleanup.length) rimraf.sync(cleanup.pop())
+    while (cleanup.length) sync(cleanup.pop())
   })
 
   it('should upload the file to the `dest` dir', function (done) {
     makeStandardEnv(function (err, env) {
       if (err) return done(err)
 
-      var parser = env.upload.single('small0')
-      env.form.append('small0', util.file('small0.dat'))
+      const parser = env.upload.single('small0')
+      env.form.append('small0', _file('small0.dat'))
 
-      util.submitForm(parser, env.form, function (err, req) {
-        assert.ifError(err)
-        assert.ok(startsWith(req.file.path, env.uploadDir))
-        assert.strictEqual(util.fileSize(req.file.path), 1778)
+      submitForm(parser, env.form, function (err, req) {
+        ifError(err)
+        ok(startsWith(req.file.path, env.uploadDir))
+        strictEqual(fileSize(req.file.path), 1778)
         done()
       })
     })
@@ -62,12 +63,12 @@ describe('Functionality', function () {
     makeStandardEnv(function (err, env) {
       if (err) return done(err)
 
-      var parser = env.upload.single('small0')
-      env.form.append('small0', util.file('small0.dat'))
+      const parser = env.upload.single('small0')
+      env.form.append('small0', _file('small0.dat'))
 
-      util.submitForm(parser, env.form, function (err, req) {
-        assert.ifError(err)
-        assert.strictEqual(req.file.filename, 'small0small0.dat')
+      submitForm(parser, env.form, function (err, req) {
+        ifError(err)
+        strictEqual(req.file.filename, 'small0small0.dat')
         done()
       })
     })
@@ -77,12 +78,12 @@ describe('Functionality', function () {
     makeStandardEnv(function (err, env) {
       if (err) return done(err)
 
-      var parser = env.upload.single('tiny0')
-      env.form.append('tiny0', util.file('tiny0.dat'))
+      const parser = env.upload.single('tiny0')
+      env.form.append('tiny0', _file('tiny0.dat'))
 
-      util.submitForm(parser, env.form, function (err, req) {
-        assert.ifError(err)
-        assert.strictEqual(req.file.filename, 'tiny0tiny0.dat')
+      submitForm(parser, env.form, function (err, req) {
+        ifError(err)
+        strictEqual(req.file.filename, 'tiny0tiny0.dat')
         done()
       })
     })
@@ -92,24 +93,24 @@ describe('Functionality', function () {
     makeStandardEnv(function (err, env) {
       if (err) return done(err)
 
-      var parser = env.upload.array('themFiles', 2)
-      env.form.append('themFiles', util.file('small0.dat'))
-      env.form.append('themFiles', util.file('small1.dat'))
+      const parser = env.upload.array('themFiles', 2)
+      env.form.append('themFiles', _file('small0.dat'))
+      env.form.append('themFiles', _file('small1.dat'))
 
-      util.submitForm(parser, env.form, function (err, req) {
-        assert.ifError(err)
-        assert.strictEqual(req.files.length, 2)
-        assert.strictEqual(req.files[0].filename, 'themFilessmall0.dat')
-        assert.strictEqual(req.files[1].filename, 'themFilessmall1.dat')
+      submitForm(parser, env.form, function (err, req) {
+        ifError(err)
+        strictEqual(req.files.length, 2)
+        strictEqual(req.files[0].filename, 'themFilessmall0.dat')
+        strictEqual(req.files[1].filename, 'themFilessmall1.dat')
         done()
       })
     })
   })
 
   it('should rename the destination directory to a different directory', function (done) {
-    var storage = multer.diskStorage({
+    const storage = diskStorage({
       destination: function (req, file, cb) {
-        temp.template('testforme-%s').mkdir(function (err, uploadDir) {
+        template('testforme-%s').mkdir(function (err, uploadDir) {
           if (err) return cb(err)
 
           cleanup.push(uploadDir)
@@ -119,18 +120,18 @@ describe('Functionality', function () {
       filename: generateFilename
     })
 
-    var form = new FormData()
-    var upload = multer({ storage: storage })
-    var parser = upload.array('themFiles', 2)
+    const form = new FormData()
+    const upload = multer({ storage: storage })
+    const parser = upload.array('themFiles', 2)
 
-    form.append('themFiles', util.file('small0.dat'))
-    form.append('themFiles', util.file('small1.dat'))
+    form.append('themFiles', _file('small0.dat'))
+    form.append('themFiles', _file('small1.dat'))
 
-    util.submitForm(parser, form, function (err, req) {
-      assert.ifError(err)
-      assert.strictEqual(req.files.length, 2)
-      assert.ok(req.files[0].path.indexOf('/testforme-') >= 0)
-      assert.ok(req.files[1].path.indexOf('/testforme-') >= 0)
+    submitForm(parser, form, function (err, req) {
+      ifError(err)
+      strictEqual(req.files.length, 2)
+      ok(req.files[0].path.indexOf('/testforme-') >= 0)
+      ok(req.files[1].path.indexOf('/testforme-') >= 0)
       done()
     })
   })
